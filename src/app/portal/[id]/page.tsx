@@ -42,17 +42,15 @@ export default function UserAttendancePage() {
     const isBlocked = (date: Date) => {
         // Check employment dates
         const dateStr = format(date, "yyyy-MM-dd");
-        const checkDate = new Date(dateStr);
-        const startDate = new Date(user.startDate);
-        // Normalize start date to midnight
-        startDate.setHours(0, 0, 0, 0);
 
-        if (checkDate < startDate) return true;
+        // Compare with startDate
+        // Ensure we compare YYYY-MM-DD strings to avoid timezone issues
+        const startDateStr = new Date(user.startDate).toISOString().split('T')[0];
+        if (dateStr < startDateStr) return true;
 
         if (user.endDate) {
-            const endDate = new Date(user.endDate);
-            endDate.setHours(0, 0, 0, 0);
-            if (checkDate > endDate) return true;
+            const endDateStr = new Date(user.endDate).toISOString().split('T')[0];
+            if (dateStr > endDateStr) return true;
         }
 
         return isWeekend(date) || isHoliday(date);

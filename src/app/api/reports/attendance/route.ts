@@ -95,27 +95,64 @@ export async function GET(request: Request) {
                 department: user.department?.name || "",
             };
 
+            // Prepare employment dates
+            const startDate = new Date(user.startDate);
+            startDate.setHours(0, 0, 0, 0);
+
+            let endDate: Date | null = null;
+            if (user.endDate) {
+                endDate = new Date(user.endDate);
+                endDate.setHours(0, 0, 0, 0);
+            }
+
             dates.forEach((date) => {
                 const dateStr = date.toISOString().split("T")[0];
                 const key = `${user.id}_${dateStr}`;
                 const categoryCode = attendanceMap.get(key);
-                rowData[dateStr] = categoryCode || "";
+
+                // Check if date is within employment period
+                const checkDate = new Date(date);
+                checkDate.setHours(0, 0, 0, 0);
+
+                let isBlocked = false;
+                if (checkDate < startDate) isBlocked = true;
+                if (endDate && checkDate > endDate) isBlocked = true;
+
+                if (!isBlocked) {
+                    rowData[dateStr] = categoryCode || "";
+                } else {
+                    rowData[dateStr] = ""; // Don't show data for blocked days
+                }
             });
 
             const row = worksheet.addRow(rowData);
 
-            // Style cells based on weekend
+            // Style cells
             dates.forEach((date, index) => {
                 const day = date.getDay();
-                if (day === 0 || day === 6) {
-                    // 0 is Sunday, 6 is Saturday
-                    // Column index is 5 (AM, Surname, Name, Dept are 1-4) + index
-                    const colIndex = 5 + index;
-                    const cell = row.getCell(colIndex);
+                const colIndex = 5 + index;
+                const cell = row.getCell(colIndex);
+
+                // Check blocked again for styling
+                const checkDate = new Date(date);
+                checkDate.setHours(0, 0, 0, 0);
+
+                let isBlocked = false;
+                if (checkDate < startDate) isBlocked = true;
+                if (endDate && checkDate > endDate) isBlocked = true;
+
+                if (isBlocked) {
                     cell.fill = {
                         type: "pattern",
                         pattern: "solid",
-                        fgColor: { argb: "FFD3D3D3" }, // Light Gray
+                        fgColor: { argb: "FFEEEEEE" }, // Very Light Gray for non-employment
+                    };
+                } else if (day === 0 || day === 6) {
+                    // 0 is Sunday, 6 is Saturday
+                    cell.fill = {
+                        type: "pattern",
+                        pattern: "solid",
+                        fgColor: { argb: "FFD3D3D3" }, // Light Gray for weekends
                     };
                 }
             });

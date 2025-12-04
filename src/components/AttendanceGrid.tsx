@@ -126,17 +126,16 @@ export function AttendanceGrid({ currentDate, setCurrentDate }: AttendanceGridPr
                                     const category = categories.find(c => c.code === code);
 
                                     // Check employment dates
-                                    const dayDate = new Date(dateStr);
-                                    const startDate = new Date(user.startDate);
-                                    startDate.setHours(0, 0, 0, 0);
+                                    // Check employment dates
+                                    // Use string comparison (YYYY-MM-DD) to avoid timezone issues
+                                    const startDateStr = new Date(user.startDate).toISOString().split('T')[0];
 
                                     let isEmploymentBlocked = false;
-                                    if (dayDate < startDate) {
+                                    if (dateStr < startDateStr) {
                                         isEmploymentBlocked = true;
                                     } else if (user.endDate) {
-                                        const endDate = new Date(user.endDate);
-                                        endDate.setHours(0, 0, 0, 0);
-                                        if (dayDate > endDate) {
+                                        const endDateStr = new Date(user.endDate).toISOString().split('T')[0];
+                                        if (dateStr > endDateStr) {
                                             isEmploymentBlocked = true;
                                         }
                                     }
