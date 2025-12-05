@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   postgres:
@@ -12,6 +12,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dashboard-app
+    environment:
+      DATABASE_URL: postgres://admin:FSg8HiQ4QyqG1L1b@postgres:5432/dashboardDB
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
     restart: always
 
 volumes:
